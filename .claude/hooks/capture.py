@@ -22,6 +22,7 @@ import json
 import os
 import re
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -193,6 +194,10 @@ def final_response(lines: list):
     return body, model
 
 
+def collected_text(body: str) -> bool:
+    return body != "(no text response this turn)"
+
+
 def debug(kind: str, payload: dict) -> None:
     if os.environ.get("CAPTURE_DEBUG") != "1":
         return
@@ -235,6 +240,15 @@ def main() -> int:
         if prompt_num == 0:
             return 0  # hook installed mid-turn: no prompt on record, don't write an orphan
         body, model = final_response(lines)
+        # Stop can fire before the final assistant line is flushed to the transcript
+        # (seen locally: hook read at .402, reply line stamped .340 was not on disk yet).
+        # Re-read for up to ~3s before settling for the placeholder.
+        for _ in range(15):
+            if collected_text(body):
+                break
+            time.sleep(0.2)
+            lines = transcript_lines(payload.get("transcript_path", ""))
+            body, model = final_response(lines)
         model = model or meta.get("model", "unknown")
         # Stop can fire more than once per turn (another Stop hook may continue the turn).
         # Write each distinct final text; skip exact duplicates of what's already logged for this prompt.
