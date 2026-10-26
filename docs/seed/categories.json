@@ -1,0 +1,80 @@
+{
+  "_format": "Two-level tree matching Amazon's department > sub-category. `slug` of a leaf must match categorySlug in products.json. `nav: true` marks the ones shown in the header sub-nav (in this order). `home` lists the leaf slugs used in each home-page card's 2x2 image grid.",
+  "departments": [
+    {
+      "slug": "electronics", "name": "Electronics", "nav": true,
+      "children": [
+        { "slug": "smartphones", "name": "Cell Phones" },
+        { "slug": "laptops", "name": "Laptops" },
+        { "slug": "tablets", "name": "Tablets" },
+        { "slug": "mobile-accessories", "name": "Headphones & Accessories" }
+      ]
+    },
+    {
+      "slug": "home-kitchen", "name": "Home & Kitchen", "nav": true,
+      "children": [
+        { "slug": "kitchen-accessories", "name": "Kitchen & Dining" },
+        { "slug": "furniture", "name": "Furniture" },
+        { "slug": "home-decoration", "name": "Home Décor" }
+      ]
+    },
+    {
+      "slug": "fashion", "name": "Fashion", "nav": true,
+      "children": [
+        { "slug": "mens-shirts", "name": "Men's Shirts" },
+        { "slug": "mens-shoes", "name": "Men's Shoes" },
+        { "slug": "mens-watches", "name": "Men's Watches" },
+        { "slug": "womens-dresses", "name": "Women's Dresses" },
+        { "slug": "tops", "name": "Women's Tops" },
+        { "slug": "womens-shoes", "name": "Women's Shoes" },
+        { "slug": "womens-bags", "name": "Handbags" },
+        { "slug": "womens-jewellery", "name": "Jewelry" },
+        { "slug": "womens-watches", "name": "Women's Watches" },
+        { "slug": "sunglasses", "name": "Sunglasses" }
+      ]
+    },
+    {
+      "slug": "beauty-personal-care", "name": "Beauty & Personal Care", "nav": true,
+      "children": [
+        { "slug": "beauty", "name": "Makeup" },
+        { "slug": "skin-care", "name": "Skin Care" },
+        { "slug": "fragrances", "name": "Fragrance" }
+      ]
+    },
+    {
+      "slug": "grocery", "name": "Grocery & Gourmet Food", "nav": true,
+      "children": [
+        { "slug": "groceries", "name": "Pantry & Fresh" }
+      ]
+    },
+    {
+      "slug": "sports-outdoors", "name": "Sports & Outdoors", "nav": true,
+      "children": [
+        { "slug": "sports-accessories", "name": "Sports Equipment" }
+      ]
+    },
+    {
+      "slug": "automotive", "name": "Automotive", "nav": true,
+      "children": [
+        { "slug": "vehicle", "name": "Cars" },
+        { "slug": "motorcycle", "name": "Motorcycles" }
+      ]
+    }
+  ],
+  "home": [
+    { "title": "Plug in with our electronics", "cards": ["mobile-accessories", "tablets", "smartphones", "laptops"], "labels": ["Headphones", "Tablets", "Phones", "Laptops"] },
+    { "title": "Fantastic finds for home", "cards": ["kitchen-accessories", "home-decoration", "furniture", "kitchen-accessories"], "labels": ["Kitchen", "Home Decor", "Furniture", "Dining"] },
+    { "title": "Shine brighter with your fashion faves", "cards": ["womens-jewellery", "womens-bags", "womens-shoes", "sunglasses"], "labels": ["Jewelry", "Handbags", "Footwear", "Sunglasses"] },
+    { "title": "Gear up to get fit", "cards": ["sports-accessories", "mens-shoes", "tops", "groceries"], "labels": ["Equipment", "Shoes", "Clothing", "Nutrition"] },
+    { "title": "Beauty picks", "cards": ["beauty", "skin-care", "fragrances", "beauty"], "labels": ["Makeup", "Skin Care", "Fragrance", "Nails"] },
+    { "title": "Level up your PC here", "cards": ["laptops", "mobile-accessories", "tablets", "laptops"], "labels": ["Laptops", "Accessories", "Tablets", "Workstations"] },
+    { "title": "Shop deals in Fashion", "cards": ["mens-shirts", "womens-dresses", "mens-watches", "womens-watches"], "labels": ["Men", "Women", "Watches", "Luxury"] },
+    { "title": "Everyday essentials", "cards": ["groceries", "kitchen-accessories", "skin-care", "groceries"], "labels": ["Pantry", "Kitchen", "Personal Care", "Fresh"] }
+  ],
+  "hero": [
+    { "title": "Shop kitchen must-haves", "cta": "/c/kitchen-accessories", "image": "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1500&q=80" },
+    { "title": "Shop all things beauty", "cta": "/c/beauty-personal-care", "image": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=1500&q=80" },
+    { "title": "Start looking sharp", "cta": "/c/fashion", "image": "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1500&q=80" },
+    { "title": "Level up your PC here", "cta": "/c/laptops", "image": "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=1500&q=80" }
+  ]
+}
