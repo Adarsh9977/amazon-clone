@@ -1,0 +1,22 @@
+# deps / build
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# env
+.env
+.env*.local
+
+# misc
+.DS_Store
+.vercel
+npm-debug.log*
+
+# Claude Code per-user settings (the shared hook config in .claude/settings.json IS committed)
+.claude/settings.local.json
+
+# NOTE: .agent-logs/ is intentionally NOT ignored. It ships with the repo.
