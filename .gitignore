@@ -20,3 +20,6 @@ npm-debug.log*
 .claude/settings.local.json
 
 # NOTE: .agent-logs/ is intentionally NOT ignored. It ships with the repo.
+
+# python bytecode
+__pycache__/
