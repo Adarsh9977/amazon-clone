@@ -121,7 +121,7 @@ export function CartView() {
         Subtotal ({count} {count === 1 ? "item" : "items"}): <span className="font-bold">{formatCents(subtotal)}</span>
       </p>
       <Link
-        href="/signin?callbackUrl=%2Fcheckout"
+        href="/checkout"
         className="mt-3 flex h-[34px] w-full items-center justify-center rounded-full bg-amz-yellow text-[13px] shadow-[0_2px_5px_rgba(213,217,217,.5)] hover:bg-amz-yellow-hover"
       >
         Proceed to checkout

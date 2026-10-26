@@ -2,16 +2,47 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { useEffect } from "react";
+import { getCart, mergeGuestCart } from "@/actions/cart";
 import { useCart } from "@/store/cart";
 import { useToast } from "@/store/toast";
 import { CheckIcon } from "./icons";
 
-/** Rehydrates the persisted cart after mount and renders the "Added to cart" toast. */
-export function ClientShell() {
+/** Keeps the cart store in step with the session (F8). */
+function useCartSession() {
+  const { data: session, status } = useSession();
+  const uid = session?.user?.id ?? null;
+
   useEffect(() => {
-    useCart.persist.rehydrate();
-  }, []);
+    if (status === "loading") return;
+    let cancelled = false;
+    (async () => {
+      if (!useCart.persist.hasHydrated()) await useCart.persist.rehydrate();
+      const s = useCart.getState();
+      try {
+        if (uid && s.userId !== uid) {
+          // Just signed in (or reloaded while signed in): fold any guest items into the DB cart.
+          // Once userId is set, partialize stops persisting items, which clears the local guest cart.
+          const guest = s.userId ? [] : s.items.map((i) => ({ productId: i.productId, quantity: i.quantity }));
+          const items = guest.length ? await mergeGuestCart(guest) : await getCart();
+          if (!cancelled) useCart.getState().setServerCart(uid, items);
+        } else if (!uid && s.userId) {
+          useCart.getState().setServerCart(null, []); // signed out: the DB cart stays in the DB
+        }
+      } finally {
+        if (!cancelled) useCart.setState({ hydrated: true });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [status, uid]);
+}
+
+/** Session-aware cart sync, plus the "Added to cart" toast. */
+export function ClientShell() {
+  useCartSession();
   const toast = useToast((s) => s.toast);
   const dismiss = useToast((s) => s.dismiss);
 
