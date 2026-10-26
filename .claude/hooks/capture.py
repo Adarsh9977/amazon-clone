@@ -108,8 +108,10 @@ def write_meta(path: Path, updates: dict) -> None:
     path.write_text("---\n" + "\n".join(out) + "\n---\n" + text[m.end():], encoding="utf-8")
 
 
-def nums(text: str, kind: str) -> list:
-    return [int(n) for n in re.findall(rf"\[LOG_ENTRY type={kind} num=(\d+) ", text)]
+def nums(text: str, kind: str, sid: str) -> list:
+    # Only real entry headers: at line start, with this session's id. A prompt that quotes
+    # log entries (e.g. the 8x format example) must not move the counter.
+    return [int(n) for n in re.findall(rf"^\[LOG_ENTRY type={kind} num=(\d+) session={re.escape(sid[:8])}\]$", text, re.M)]
 
 
 def append_entry(path: Path, kind: str, num: int, sid: str, model: str, body: str, ts: str) -> None:
@@ -183,7 +185,11 @@ def launch_model() -> str:
     return "unknown"
 
 
-META_PREFIXES =("<local-command", "<command-name", "<command-message", "<system-reminder")
+META_PREFIXES = ("<local-command", "<command-name", "<command-message", "<system-reminder", "<task-notification")
+
+# Messages the app injects into the conversation (background task finished, other sessions,
+# CI events). They reach UserPromptSubmit like a prompt, but nobody typed them.
+APP_EVENT_PREFIXES = ("<task-notification", "<side-sessions-event", "<ci-monitor-event")
 
 
 def _user_kind(o: dict) -> str:
@@ -263,12 +269,14 @@ def main() -> int:
     lines = transcript_lines(payload.get("transcript_path", ""))
 
     if kind == "prompt":
+        if payload.get("prompt", "").lstrip().startswith(APP_EVENT_PREFIXES):
+            return 0  # not a user prompt; the turn's reply is logged under the last real prompt
         model = payload.get("model") or last_model(lines)
         if model == "unknown" and meta.get("model") not in (None, "", "unknown"):
             model = meta["model"]
         if model == "unknown":
             model = launch_model()
-        num = max(nums(text, "PROMPT"), default=0) + 1
+        num = max(nums(text, "PROMPT", sid), default=0) + 1
         append_entry(path, "PROMPT", num, sid, model, payload.get("prompt", ""), ts)
         write_meta(path, {
             "total_exchanges": str(num),
@@ -278,7 +286,7 @@ def main() -> int:
         })
 
     elif kind == "response":
-        prompt_num = max(nums(text, "PROMPT"), default=0)
+        prompt_num = max(nums(text, "PROMPT", sid), default=0)
         if prompt_num == 0:
             return 0  # hook installed mid-turn: no prompt on record, don't write an orphan
         body, model = final_response(lines)
@@ -295,8 +303,8 @@ def main() -> int:
         # Stop can fire more than once per turn (another Stop hook may continue the turn).
         # Write each distinct final text; skip exact duplicates of what's already logged for this prompt.
         existing = re.findall(
-            rf"\[LOG_ENTRY type=RESPONSE num={prompt_num} [^\]]*\]\ntimestamp: [^\n]*\nmodel: [^\n]*\n\n(.*?)\n\n\n",
-            text, re.S,
+            rf"^\[LOG_ENTRY type=RESPONSE num={prompt_num} session={re.escape(sid[:8])}\]\ntimestamp: [^\n]*\nmodel: [^\n]*\n\n(.*?)\n\n\n",
+            text, re.S | re.M,
         )
         if body.rstrip("\n") in [e.rstrip("\n") for e in existing]:
             return 0
