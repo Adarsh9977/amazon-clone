@@ -1,0 +1,22 @@
+# Local Postgres for development. Stands in for Neon until the hosted DB is set up.
+# Host port 5433 so it doesn't collide with other local Postgres instances.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: amazon-clone-db
+    environment:
+      POSTGRES_USER: amazon
+      POSTGRES_PASSWORD: amazon
+      POSTGRES_DB: amazon
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U amazon -d amazon"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  pgdata:
