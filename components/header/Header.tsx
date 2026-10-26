@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { getDepartments } from "@/lib/catalog";
 import { Logo } from "../Logo";
-import { ChevronIcon, MenuIcon, PinIcon, UserIcon } from "../icons";
+import { MenuIcon, PinIcon } from "../icons";
+import { AccountMenu } from "./AccountMenu";
 import { CartLink } from "./CartLink";
 import { SearchBar } from "./SearchBar";
 
@@ -31,16 +32,7 @@ export async function Header() {
             </Suspense>
           </div>
           <div className="ml-auto flex items-center md:ml-0">
-            <Link href="/signin" className={`${box} flex flex-col px-1.5 py-1.5`}>
-              <span className="flex items-center gap-1 text-xs leading-[14px]">
-                <span className="hidden sm:inline">Hello, sign in</span>
-                <span className="sm:hidden">Sign in</span>
-                <UserIcon className="h-5 w-5 sm:hidden" />
-              </span>
-              <span className="hidden items-center gap-0.5 text-sm font-bold leading-[15px] sm:flex">
-                Account &amp; Lists <ChevronIcon className="h-3 w-3 text-[#a7acb2]" />
-              </span>
-            </Link>
+            <AccountMenu />
             <Link href="/orders" className={`${box} hidden flex-col px-1.5 py-1.5 sm:flex`}>
               <span className="text-xs leading-[14px]">Returns</span>
               <span className="text-sm font-bold leading-[15px]">&amp; Orders</span>

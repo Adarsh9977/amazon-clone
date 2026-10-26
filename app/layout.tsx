@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { ClientShell } from "@/components/ClientShell";
-import { Footer } from "@/components/Footer";
-import { Header } from "@/components/header/Header";
+import { Providers } from "@/components/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,14 +11,15 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#131921" };
 
+// Storefront chrome lives in app/(shop)/layout.tsx; sign-in pages in app/(auth) have none, like the live site.
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body id="top" className="flex min-h-dvh flex-col antialiased">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <ClientShell />
+        <Providers>
+          {children}
+          <ClientShell />
+        </Providers>
       </body>
     </html>
   );
