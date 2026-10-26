@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { ClientShell } from "@/components/ClientShell";
 import { Providers } from "@/components/Providers";
+import { siteUrl } from "@/lib/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: "Amazon.clone: Online Shopping", template: "%s : Amazon.clone" },
   description: "A working rebuild of the Amazon.com shopping experience: search, product pages, cart, checkout and orders.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(siteUrl()),
 };
 
 export const viewport: Viewport = { themeColor: "#131921" };

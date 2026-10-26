@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { siteUrl } from "./site";
 
 // Created lazily so builds and pages that don't pay still work without Stripe keys.
 let client: Stripe | null = null;
@@ -11,6 +12,7 @@ export function getStripe(): Stripe | null {
   return client;
 }
 
-export function appUrl(): string {
-  return (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+/** Public origin for links that leave the app (Stripe redirects). Prefers the request's own host. */
+export function appUrl(requestOrigin?: string): string {
+  return (requestOrigin ?? siteUrl()).replace(/\/$/, "");
 }

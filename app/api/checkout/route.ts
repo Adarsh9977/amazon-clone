@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
   const t = orderTotals(lines);
   const orderId = randomUUID();
-  const base = appUrl();
+  const base = appUrl(req.nextUrl.origin);
   const checkout = await stripe.checkout.sessions.create({
     mode: "payment",
     customer_email: user.email ?? undefined,
