@@ -21,6 +21,7 @@ Env overrides (all optional):
 import json
 import os
 import re
+import subprocess
 import sys
 import time
 from datetime import datetime, timezone
@@ -143,7 +144,46 @@ def last_model(lines: list) -> str:
     return "unknown"
 
 
-META_PREFIXES = ("<local-command", "<command-name", "<command-message", "<system-reminder")
+def launch_model() -> str:
+    """
+    Model for a turn with no reply on record yet (the first prompt of a session).
+
+    No hook payload carries the model and the transcript has none until the first reply,
+    so read the `--model` flag of the claude process that spawned this hook (the desktop
+    app always passes one), then ANTHROPIC_MODEL, then a `model` key in settings files.
+    """
+    pid = os.getppid()
+    for _ in range(8):
+        if pid <= 1:
+            break
+        try:
+            out = subprocess.run(["ps", "-o", "ppid=,args=", "-p", str(pid)],
+                                 capture_output=True, text=True, timeout=2).stdout.strip()
+        except Exception:
+            break
+        ppid, _, args = out.partition(" ")
+        m = re.search(r"(?:^|\s)--model[=\s]+(\S+)", args)
+        if m and "claude" in args:
+            return m.group(1)
+        try:
+            pid = int(ppid)
+        except ValueError:
+            break
+    if os.environ.get("ANTHROPIC_MODEL"):
+        return os.environ["ANTHROPIC_MODEL"]
+    for p in (project_dir() / ".claude" / "settings.local.json",
+              project_dir() / ".claude" / "settings.json",
+              Path.home() / ".claude" / "settings.json"):
+        try:
+            m = json.loads(p.read_text(encoding="utf-8")).get("model")
+        except Exception:
+            continue
+        if m:
+            return m
+    return "unknown"
+
+
+META_PREFIXES =("<local-command", "<command-name", "<command-message", "<system-reminder")
 
 
 def _user_kind(o: dict) -> str:
@@ -226,6 +266,8 @@ def main() -> int:
         model = payload.get("model") or last_model(lines)
         if model == "unknown" and meta.get("model") not in (None, "", "unknown"):
             model = meta["model"]
+        if model == "unknown":
+            model = launch_model()
         num = max(nums(text, "PROMPT"), default=0) + 1
         append_entry(path, "PROMPT", num, sid, model, payload.get("prompt", ""), ts)
         write_meta(path, {
