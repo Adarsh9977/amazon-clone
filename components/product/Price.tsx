@@ -3,9 +3,10 @@ import { discountPercent, formatCents, priceParts } from "@/lib/money";
 type Size = "sm" | "md" | "lg";
 
 const SIZES: Record<Size, { whole: string; sup: string }> = {
-  sm: { whole: "text-[21px] leading-[21px]", sup: "text-[12px] top-[-0.6em]" },
-  md: { whole: "text-[28px] leading-[28px]", sup: "text-[13px] top-[-0.85em]" },
-  lg: { whole: "text-[28px] leading-[32px]", sup: "text-[13px] top-[-0.95em]" },
+  // Superscripts sit at the cap height of the dollars: flex items-start puts them at the line top.
+  sm: { whole: "text-[21px] leading-[21px]", sup: "text-[12px] leading-[12px] top-[1px]" },
+  md: { whole: "text-[28px] leading-[28px]", sup: "text-[13px] leading-[13px] top-[2px]" },
+  lg: { whole: "text-[28px] leading-[32px]", sup: "text-[13px] leading-[13px] top-[4px]" },
 };
 
 /** Superscript $ + big dollars + superscript cents, like the live site (findings #5). */
