@@ -1,0 +1,180 @@
+// prisma/schema.prisma
+// Amazon.com clone — final data model (v1.1, 23 Oct 2026)
+// Changes vs spec v1.0: Product.soldLastMonth, Product.badge, Product.thumbnail,
+// Review.reviewerName (seeded reviews have no user), Review.userId optional,
+// Wishlist table, Category.position for nav ordering.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime   @default(now())
+  cart         Cart?
+  orders       Order[]
+  reviews      Review[]
+  wishlist     Wishlist[]
+}
+
+// ─── Catalog ─────────────────────────────────────────────────────────────
+
+model Category {
+  id       String     @id @default(cuid())
+  slug     String     @unique
+  name     String
+  position Int        @default(0) // order in header sub-nav / filter rail
+  showNav  Boolean    @default(false)
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+
+  @@index([parentId])
+}
+
+enum Badge {
+  BEST_SELLER
+  OVERALL_PICK
+  AMAZONS_CHOICE
+}
+
+model Product {
+  id             Int       @id // keep DummyJSON ids; stable across reseeds
+  slug           String    @unique
+  title          String
+  description    String
+  brand          String
+  priceCents     Int
+  listPriceCents Int?      // null = no discount shown
+  rating         Float     @default(0)
+  reviewCount    Int       @default(0)
+  soldLastMonth  Int       @default(0) // "5K+ bought in past month"
+  badge          Badge?
+  stock          Int
+  thumbnail      String
+  images         String[]
+  bullets        String[]
+  categoryId     String
+  category       Category  @relation(fields: [categoryId], references: [id])
+  // Filled by raw SQL after seed; see migration below. Prisma can't model tsvector.
+  searchVector   Unsupported("tsvector")?
+  createdAt      DateTime  @default(now())
+
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+  reviews    Review[]
+  wishlist   Wishlist[]
+
+  @@index([categoryId])
+  @@index([brand])
+  @@index([priceCents])
+  @@index([rating])
+  @@index([soldLastMonth])
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  productId    Int
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId       String?  // null for seeded reviews
+  user         User?    @relation(fields: [userId], references: [id])
+  reviewerName String
+  rating       Int      // 1..5
+  title        String
+  body         String
+  verified     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@index([productId, createdAt])
+  @@unique([productId, userId]) // one review per user per product (null userId exempt)
+}
+
+// ─── Cart ────────────────────────────────────────────────────────────────
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+
+  @@unique([cartId, productId])
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────
+
+enum OrderStatus {
+  PENDING   // Stripe session created, not paid
+  PAID      // webhook confirmed
+  SHIPPED   // manual / future
+  CANCELLED // session expired
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  number          Int         @unique @default(autoincrement()) // shown as 114-XXXXXXX
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  stripeSessionId String      @unique
+  status          OrderStatus @default(PENDING)
+  subtotalCents   Int
+  taxCents        Int
+  shippingCents   Int
+  totalCents      Int
+  shipName        String
+  shipLine1       String
+  shipLine2       String?
+  shipCity        String
+  shipState       String
+  shipZip         String
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  paidAt          DateTime?
+
+  @@index([userId, createdAt])
+}
+
+model OrderItem {
+  id                 String  @id @default(cuid())
+  orderId            String
+  order              Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId          Int
+  product            Product @relation(fields: [productId], references: [id])
+  titleSnapshot      String
+  imageSnapshot      String
+  priceCentsSnapshot Int
+  quantity           Int
+}
+
+// ─── Wishlist (P2) ───────────────────────────────────────────────────────
+
+model Wishlist {
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, productId])
+}
